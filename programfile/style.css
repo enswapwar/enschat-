@@ -80,6 +80,37 @@ main#chat-log {
 .message {
   margin: 5px 0;
 }
+.resizable-window {
+  position: fixed;
+  top: 80px;
+  right: 10px;
+  width: 200px;
+  background: #f0f0f0;
+  border: 1px solid #aaa;
+  padding: 6px;
+  resize: both;
+  overflow: auto;
+  z-index: 1000;
+  margin-bottom: 10px;
+}
+
+#color-window { top: 300px; }
+
+#admin-notice {
+  position: fixed;
+  top: 50px;
+  right: 50%;
+  transform: translateX(50%);
+  background: #4caf50;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  z-index: 2000;
+}
+
+.hidden {
+  display: none;
+}
 
 .admin-name {
   color: red;
