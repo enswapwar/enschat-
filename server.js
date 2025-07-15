@@ -7,18 +7,24 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// 静的ファイル（index.htmlなど）を配信
-app.use(express.static(path.join(__dirname, ".")));
+// 静的ファイルの提供（HTML, CSS, JS）
+app.use(express.static(path.join(__dirname, "public"))); // ← HTML置くフォルダを "public" に統一
 
+// ソケット通信
 io.on("connection", (socket) => {
-  console.log("🟢 ユーザー接続:", socket.id);
+  // チャットメッセージ受信 → 全員に送信
+  socket.on("chat", (data) => {
+    io.emit("chat", data); // { name, msg, isAdmin }
+  });
 
-  socket.on("chat", (msg) => {
-    io.emit("chat", msg); // 全員にブロードキャスト
+  // 退出通知受信 → 全員に送信
+  socket.on("leave", (name) => {
+    io.emit("leave", name);
   });
 });
 
+// ポート設定
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`🚀 サーバー起動: http://localhost:${PORT}`);
+  console.log(`✅ サーバー起動中: http://localhost:${PORT}`);
 });
