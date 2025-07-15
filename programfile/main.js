@@ -1,67 +1,42 @@
-// --- 既存スニペット省略 ---
-// 名前色保存と反映
-const colorPicker = document.getElementById("name-color-picker");
-const savedColor = localStorage.getItem("name-color") || "#000000";
-colorPicker.value = savedColor;
-let nameColor = savedColor;
+const socket = io();
 
-colorPicker.addEventListener("input", () => {
-  nameColor = colorPicker.value;
-  localStorage.setItem("name-color", nameColor);
+const input = document.getElementById("chat-input");
+const sendBtn = document.getElementById("send-btn");
+const nameInput = document.getElementById("name-input");
+const chatLog = document.getElementById("chat-log");
+const colorPicker = document.getElementById("name-color-picker");
+
+let userColor = colorPicker?.value || "#000000";
+
+// 色変更（メッセージの文字に適用する用）
+colorPicker?.addEventListener("input", () => {
+  userColor = colorPicker.value;
+  localStorage.setItem("name-color", userColor);
 });
 
-// 接続者リスト管理
-const usersList = document.getElementById("users-list");
-let currentUsers = [];
-
-// 管理者通知
-const adminNotice = document.getElementById("admin-notice");
-function showAdminNotice() {
-  adminNotice.classList.remove("hidden");
-  setTimeout(() => adminNotice.classList.add("hidden"), 3000);
+// 送信処理
+function sendMessage() {
+  const name = nameInput.value.trim();
+  const msg = input.value.trim();
+  if (!msg) return;
+  socket.emit("chat", { name, msg, color: userColor });
+  input.value = "";
 }
 
-// パスワード入力処理修正
-adminPassInput.addEventListener("input", async () => {
-  const hash = await sha256(adminPassInput.value.trim());
-  const correctHash = "d09f..."; // same hash
-  isAdmin = (hash === correctHash);
-  if (isAdmin) showAdminNotice();
+sendBtn.addEventListener("click", sendMessage);
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") sendMessage();
 });
 
-// socket イベント
-socket.on("connect", () => socket.emit("requestUsers"));
-socket.on("updateUsers", (users) => {
-  currentUsers = users;
-  usersList.innerHTML = "";
-  users.forEach(u => {
-    const li = document.createElement("li");
-    li.textContent = u;
-    usersList.appendChild(li);
-  });
-});
-
-// 送信と表示にも名前色反映
-socket.on("chat", ({ name, msg, isAdmin }) => {
+// 表示側：メッセージの色を反映
+socket.on("chat", ({ name, msg, color }) => {
   const p = document.createElement("p");
-  const nameSpan = document.createElement("span");
-  nameSpan.textContent = name;
-  nameSpan.style.color = isAdmin ? "red" : nameColor;
-  p.innerHTML = "";
-  p.append(nameSpan, document.createTextNode(": " + msg));
+  const span = document.createElement("span");
+  span.textContent = `${name}: `;
+  const messageText = document.createElement("span");
+  messageText.textContent = msg;
+  messageText.style.color = color || "#000";
+  p.append(span, messageText);
   chatLog.appendChild(p);
   chatLog.scrollTop = chatLog.scrollHeight;
-});
-
-// server.js 追記
-io.on("connection", (socket) => {
-  // 接続後ユーザー追加・一覧ブロードキャスト
-  socket.on("requestUsers", () => {
-    const users = Array.from(io.of("/").sockets.values()).map(s => s.id);
-    io.emit("updateUsers", users);
-  });
-  socket.on("disconnect", () => {
-    const users = Array.from(io.of("/").sockets.values()).map(s => s.id);
-    io.emit("updateUsers", users);
-  });
 });
