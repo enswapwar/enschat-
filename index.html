@@ -12,6 +12,19 @@
       <button id="toggle-dark">🌙 ダークモード</button>
       <button id="clear-logs">🗑 ログ削除</button>
     </div>
+      <!-- ① 接続者一覧ウィンドウ -->
+  <div id="users-window" class="resizable-window">
+    <h3>接続中のユーザー</h3>
+    <ul id="users-list"></ul>
+  </div>
+
+  <!-- ② 名前色選択ウィンドウ -->
+  <div id="color-window" class="resizable-window">
+    <h3>名前の色を選ぶ</h3>
+    <input type="color" id="name-color-picker" value="#000000">
+  </div>
+  <!-- 管理者認証OKの通知 -->
+  <div id="admin-notice" class="hidden">✅ 管理者認証に成功しました</div>
     <div class="right-controls">
       <input type="password" id="admin-pass" placeholder="管理者パスワード"/>
     </div>
