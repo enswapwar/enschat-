@@ -5,9 +5,19 @@ const chatInput = document.getElementById("chat-input");
 const nameInput = document.getElementById("name-input");
 const sendBtn = document.getElementById("send-btn");
 const adminPassInput = document.getElementById("admin-pass");
+
 let isAdmin = false;
 
-// SHA-256でハッシュ化
+// 名前を localStorage に保存＆復元
+const savedName = localStorage.getItem("chat-name");
+if (savedName) {
+  nameInput.value = savedName;
+}
+nameInput.addEventListener("input", () => {
+  localStorage.setItem("chat-name", nameInput.value.trim());
+});
+
+// SHA-256ハッシュ関数
 async function sha256(text) {
   const buffer = new TextEncoder().encode(text);
   const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
@@ -15,14 +25,14 @@ async function sha256(text) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// 管理者判定（パスワードが正しければ isAdmin を true に）
+// 管理者認証
 adminPassInput.addEventListener("input", async () => {
   const hash = await sha256(adminPassInput.value.trim());
-  const correctHash = "d09f64d92f514586282a0e18cd0a4654961501ecac0142e3bb2f181bd3edce7f"; // enswapwarpassword のSHA256
+  const correctHash = "d09f64d92f514586282a0e18cd0a4654961501ecac0142e3bb2f181bd3edce7f"; // enswapwarpassword
   isAdmin = (hash === correctHash);
 });
 
-// 送信処理
+// メッセージ送信
 function sendMessage() {
   const msg = chatInput.value.trim();
   const name = nameInput.value.trim() || "名無し";
@@ -36,13 +46,29 @@ chatInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendMessage();
 });
 
-// 受信表示
-socket.on("chat", (data) => {
-  const { name, msg, isAdmin } = data;
+// チャットメッセージ表示
+socket.on("chat", ({ name, msg, isAdmin }) => {
   const p = document.createElement("p");
   p.classList.add("message");
-  if (isAdmin) p.innerHTML = `${msg} <span class="admin-name">: ${name}</span>`;
-  else p.innerHTML = `${msg} : ${name}`;
+  const nameHTML = isAdmin
+    ? `<span class="admin-name">${name}</span>`
+    : `<span>${name}</span>`;
+  p.innerHTML = `${nameHTML}: ${msg}`;
   chatLog.appendChild(p);
   chatLog.scrollTop = chatLog.scrollHeight;
+});
+
+// 退出通知
+socket.on("leave", (name) => {
+  const p = document.createElement("p");
+  p.classList.add("message");
+  p.innerHTML = `👋 <i>${name}</i> が退出しました`;
+  chatLog.appendChild(p);
+  chatLog.scrollTop = chatLog.scrollHeight;
+});
+
+// ページ離脱前に通知
+window.addEventListener("beforeunload", () => {
+  const name = nameInput.value.trim() || "名無し";
+  socket.emit("leave", name);
 });
