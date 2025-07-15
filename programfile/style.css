@@ -70,3 +70,18 @@ main#chat-log {
   color: #eee;
   border: 1px solid #444;
 }
+#name-input {
+  width: 120px;
+  padding: 6px;
+  margin-right: 6px;
+  font-size: 14px;
+}
+
+.message {
+  margin: 5px 0;
+}
+
+.admin-name {
+  color: red;
+  font-weight: bold;
+}
