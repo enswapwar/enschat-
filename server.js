@@ -7,8 +7,13 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// 静的ファイルの配信（HTML, CSS, JS）
-app.use(express.static(path.join(__dirname, "public"))); // ← public フォルダがWebルート
+// ルートに置いた index.html や CSS/JS を配信
+app.use(express.static(__dirname));
+
+// "/" にアクセスされたら index.html を返す
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
 // ソケット通信処理
 io.on("connection", (socket) => {
