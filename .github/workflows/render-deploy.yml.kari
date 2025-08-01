@@ -2,7 +2,7 @@ name: Auto Deploy to Render
 
 on:
   schedule:
-    - cron: "*/10 * * * *" # 10分おき
+    - cron: "*/10 * * * *" # 10分おき,.kariを消したら動く
   workflow_dispatch:      # 手動実行もできるように
 
 jobs:
