@@ -28,23 +28,6 @@ input.addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendMessage();
 });
 
-// ダークモード切り替え（自分の画面だけ）
-document.getElementById("toggle-dark").addEventListener("click", () => {
-  document.body.classList.toggle("dark-mode");
-
-  // 状態を保存（リロード後も維持できるようにする）
-  if (document.body.classList.contains("dark-mode")) {
-    localStorage.setItem("dark-mode", "enabled");
-  } else {
-    localStorage.removeItem("dark-mode");
-  }
-});
-
-// 初期化時に復元
-if (localStorage.getItem("dark-mode") === "enabled") {
-  document.body.classList.add("dark-mode");
-}
-
 // ログ削除（自分の画面だけ）
 document.getElementById("clear-logs").addEventListener("click", () => {
   const chatLog = document.getElementById("chat-log");
