@@ -103,33 +103,6 @@ main#chat-log {
   font-weight: bold;
 }
 
-/* ===== ダークモード全体 ===== */
-body.dark-mode {
-  background-color: #121212;
-  color: #f0f0f0;
-}
-
-body.dark-mode .top-bar,
-body.dark-mode .bottom-bar {
-  background: #333;
-  border-color: #555;
-}
-
-body.dark-mode #chat-log {
-  background-color: #1e1e1e;
-  border: 1px solid #333;
-  color: #f0f0f0;
-}
-
-body.dark-mode input,
-body.dark-mode button,
-body.dark-mode select,
-body.dark-mode textarea {
-  background: #222;
-  color: #f0f0f0;
-  border: 1px solid #555;
-}
-
 /* 名前入力・管理者パス・ユーザー一覧 */
 body.dark-mode #name-input,
 body.dark-mode #chat-input,
