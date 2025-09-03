@@ -94,6 +94,25 @@ main#chat-log {
   margin-bottom: 10px;
 }
 
+/* ダークモード */
+body.dark-mode {
+  background-color: #121212;
+  color: #f0f0f0;
+}
+
+body.dark-mode #chat-log {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+}
+
+body.dark-mode input,
+body.dark-mode button {
+  background: #222;
+  color: #fff;
+  border: 1px solid #555;
+}
+
+
 #color-window { top: 300px; }
 
 #admin-notice {
