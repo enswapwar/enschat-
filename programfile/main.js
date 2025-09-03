@@ -45,7 +45,7 @@ async function sha256(text) {
 // --- 管理者認証 ---
 adminPassInput.addEventListener("input", async () => {
   const hash = await sha256(adminPassInput.value.trim());
-  const correctHash = "b54cf84a09df7cbdf12c04ee8022f1225a9db4b729124d0c159b85eb80133e4e";
+  const correctHash = "b5d29b8c1580e8f4d6630c8bafd2ff08cc90f1e2c5c5ce8e42064a2d3a25f7b6";
   isAdmin = (hash === correctHash);
   if (isAdmin) {
     adminNotice.classList.remove("hidden");
