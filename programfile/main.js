@@ -13,9 +13,24 @@ const adminNotice = document.getElementById("admin-notice");
 let isAdmin = false;
 let nameColor = "#000000";
 
-// --- 名前・色を localStorage から復元 ---
-const savedName = localStorage.getItem("chat-name");
-if (savedName) nameInput.value = savedName;
+// --- Cookie操作 ---
+function setCookie(name, value, days) {
+  const expires = new Date(Date.now() + days*86400000).toUTCString();
+  document.cookie = `${name}=${value}; expires=${expires}; path=/`;
+}
+function getCookie(name) {
+  const cookies = document.cookie.split(";");
+  for (let c of cookies) {
+    const [k, v] = c.trim().split("=");
+    if (k === name) return v;
+  }
+  return "";
+}
+
+// --- 名前・色を localStorage / cookie から復元 ---
+const savedName = getCookie("chat-name") || "名無し";
+nameInput.value = savedName;
+socket.emit("setName", savedName);
 
 const savedColor = localStorage.getItem("name-color");
 if (savedColor) {
@@ -25,8 +40,11 @@ if (savedColor) {
 
 // 入力イベント
 nameInput.addEventListener("input", () => {
-  localStorage.setItem("chat-name", nameInput.value.trim());
+  const newName = nameInput.value.trim() || "名無し";
+  setCookie("chat-name", newName, 30);
+  socket.emit("setName", newName);
 });
+
 if (colorPicker) {
   colorPicker.addEventListener("input", () => {
     nameColor = colorPicker.value;
@@ -45,7 +63,7 @@ async function sha256(text) {
 // --- 管理者認証 ---
 adminPassInput.addEventListener("input", async () => {
   const hash = await sha256(adminPassInput.value.trim());
-  const correctHash = "b5d29b8c1580e8f4d6630c8bafd2ff08cc90f1e2c5c5ce8e42064a2d3a25f7b6";
+  const correctHash = "b54cf84a09df7cbdf12c04ee8022f1225a9db4b729124d0c159b85eb80133e4e"; // Orangemikan
   isAdmin = (hash === correctHash);
   if (isAdmin) {
     adminNotice.classList.remove("hidden");
@@ -84,7 +102,7 @@ socket.on("chat", ({ name, msg, isAdmin, color }) => {
   const nameSpan = document.createElement("span");
   nameSpan.textContent = name;
   if (isAdmin) {
-    nameSpan.classList.add("admin-name"); // ← 赤色CSS適用
+    nameSpan.classList.add("admin-name");
   }
 
   const msgSpan = document.createElement("span");
@@ -98,34 +116,15 @@ socket.on("chat", ({ name, msg, isAdmin, color }) => {
   chatLog.scrollTop = chatLog.scrollHeight;
 });
 
-// --- 名前保存（cookie用） ---
-function setCookie(name, value, days) {
-  const expires = new Date(Date.now() + days*86400000).toUTCString();
-  document.cookie = `${name}=${value}; expires=${expires}; path=/`;
-}
-function getCookie(name) {
-  const cookies = document.cookie.split(";");
-  for (let c of cookies) {
-    const [k, v] = c.trim().split("=");
-    if (k === name) return v;
-  }
-  return "";
-}
-
-// --- 名前を復元 ---
-const savedName = getCookie("chat-name") || "名無し";
-nameInput.value = savedName;
-socket.emit("setName", savedName);  // ← 接続時にサーバーへ送信
-
-// 入力時にcookie更新
-nameInput.addEventListener("input", () => {
-  const newName = nameInput.value.trim() || "名無し";
-  setCookie("chat-name", newName, 30);
-  socket.emit("setName", newName);  // ← サーバーにも即通知
+// --- 入退室通知 ---
+socket.on("join", (name) => {
+  const p = document.createElement("p");
+  p.classList.add("message");
+  p.innerHTML = `✅ <i>${name}</i> が入室しました`;
+  chatLog.appendChild(p);
+  chatLog.scrollTop = chatLog.scrollHeight;
 });
 
-
-// --- 退出通知 ---
 socket.on("leave", (name) => {
   const p = document.createElement("p");
   p.classList.add("message");
@@ -139,15 +138,6 @@ window.addEventListener("beforeunload", () => {
   const name = nameInput.value.trim() || "名無し";
   socket.emit("leave", name);
 });
-
-// --- ログ削除ボタン ---
-const clearLogsBtn = document.getElementById("clear-logs");
-if (clearLogsBtn) {
-  clearLogsBtn.addEventListener("click", () => {
-    chatLog.innerHTML = "";  // ログをクリア
-  });
-}
-
 
 // --- 接続時ユーザーリストリクエスト ---
 socket.on("connect", () => socket.emit("requestUsers"));
