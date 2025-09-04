@@ -113,5 +113,14 @@ window.addEventListener("beforeunload", () => {
   socket.emit("leave", name);
 });
 
+// --- ログ削除ボタン ---
+const clearLogsBtn = document.getElementById("clear-logs");
+if (clearLogsBtn) {
+  clearLogsBtn.addEventListener("click", () => {
+    chatLog.innerHTML = "";  // ログをクリア
+  });
+}
+
+
 // --- 接続時ユーザーリストリクエスト ---
 socket.on("connect", () => socket.emit("requestUsers"));
