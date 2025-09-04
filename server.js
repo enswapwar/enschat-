@@ -15,34 +15,45 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// ソケット通信処理
+// ユーザー管理 { socket.id: 名前 }
+const users = {};
+
+function broadcastUsers() {
+  io.emit("updateUsers", Object.values(users));
+}
+
 io.on("connection", (socket) => {
   console.log(`🟢 接続: ${socket.id}`);
 
-  // 接続者一覧を全員に送信
-  function broadcastUsers() {
-    const users = Array.from(io.of("/").sockets.values()).map(s => s.id);
-    io.emit("updateUsers", users);
-  }
+  // 初期状態は「名無し」
+  users[socket.id] = "名無し";
+  broadcastUsers();
 
   // チャット受信→全員に送信
   socket.on("chat", (data) => {
-    io.emit("chat", data); // { name, msg, isAdmin }
+    const { name, msg, isAdmin, color } = data;
+
+    // 名前更新
+    users[socket.id] = name || "名無し";
+    broadcastUsers();
+
+    io.emit("chat", { name, msg, isAdmin, color });
   });
 
-  // 退出通知受信→全員に送信
+  // 退出通知
   socket.on("leave", (name) => {
     io.emit("leave", name);
   });
 
-  // ユーザー一覧のリクエスト
+  // ユーザー一覧リクエスト
   socket.on("requestUsers", () => {
     broadcastUsers();
   });
 
-  // 切断時もユーザー一覧を更新
+  // 切断時
   socket.on("disconnect", () => {
     console.log(`🔴 切断: ${socket.id}`);
+    delete users[socket.id];
     broadcastUsers();
   });
 });
