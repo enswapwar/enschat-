@@ -98,6 +98,33 @@ socket.on("chat", ({ name, msg, isAdmin, color }) => {
   chatLog.scrollTop = chatLog.scrollHeight;
 });
 
+// --- 名前保存（cookie用） ---
+function setCookie(name, value, days) {
+  const expires = new Date(Date.now() + days*86400000).toUTCString();
+  document.cookie = `${name}=${value}; expires=${expires}; path=/`;
+}
+function getCookie(name) {
+  const cookies = document.cookie.split(";");
+  for (let c of cookies) {
+    const [k, v] = c.trim().split("=");
+    if (k === name) return v;
+  }
+  return "";
+}
+
+// --- 名前を復元 ---
+const savedName = getCookie("chat-name") || "名無し";
+nameInput.value = savedName;
+socket.emit("setName", savedName);  // ← 接続時にサーバーへ送信
+
+// 入力時にcookie更新
+nameInput.addEventListener("input", () => {
+  const newName = nameInput.value.trim() || "名無し";
+  setCookie("chat-name", newName, 30);
+  socket.emit("setName", newName);  // ← サーバーにも即通知
+});
+
+
 // --- 退出通知 ---
 socket.on("leave", (name) => {
   const p = document.createElement("p");
