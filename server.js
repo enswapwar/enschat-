@@ -7,56 +7,57 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+let users = {}; // { socket.id: name }
+
+// 静的ファイル配信（ルート直下の index.html を想定）
 app.use(express.static(__dirname));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// ユーザー管理 { socket.id: 名前 }
-const users = {};
-
 function broadcastUsers() {
-  io.emit("updateUsers", Object.values(users));
+  const userNames = Object.values(users);
+  io.emit("updateUsers", userNames);
 }
 
 io.on("connection", (socket) => {
   console.log(`🟢 接続: ${socket.id}`);
-  users[socket.id] = "名無し"; // 初期値
+  users[socket.id] = "名無し";
+  broadcastUsers();
 
-  // 名前をセット（接続時や変更時）
+  io.emit("join", users[socket.id]);
+
   socket.on("setName", (name) => {
-    users[socket.id] = name || "名無し";
+    users[socket.id] = name && name.trim() ? name : "名無し";
     broadcastUsers();
   });
 
-  // チャット
   socket.on("chat", (data) => {
     const { name, msg, isAdmin, color } = data;
-    users[socket.id] = name || "名無し"; // 更新
+    users[socket.id] = name && name.trim() ? name : "名無し";
     broadcastUsers();
-    io.emit("chat", { name, msg, isAdmin, color });
+    io.emit("chat", { name: users[socket.id], msg, isAdmin, color });
   });
 
-  // 退出通知
   socket.on("leave", (name) => {
-    io.emit("leave", name);
+    io.emit("leave", name || "名無し");
   });
 
-  // ユーザー一覧リクエスト
   socket.on("requestUsers", () => {
     broadcastUsers();
   });
 
-  // 切断
   socket.on("disconnect", () => {
     console.log(`🔴 切断: ${socket.id}`);
+    const name = users[socket.id] || "名無し";
     delete users[socket.id];
+    io.emit("leave", name);
     broadcastUsers();
   });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000; // ← ここ重要（Render用）
 server.listen(PORT, () => {
   console.log(`🚀 サーバー起動中: http://localhost:${PORT}`);
 });
