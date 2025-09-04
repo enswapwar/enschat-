@@ -7,10 +7,8 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// ルートに置いた index.html や CSS/JS を配信
 app.use(express.static(__dirname));
 
-// "/" にアクセスされたら index.html を返す
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
@@ -24,19 +22,19 @@ function broadcastUsers() {
 
 io.on("connection", (socket) => {
   console.log(`🟢 接続: ${socket.id}`);
+  users[socket.id] = "名無し"; // 初期値
 
-  // 初期状態は「名無し」
-  users[socket.id] = "名無し";
-  broadcastUsers();
-
-  // チャット受信→全員に送信
-  socket.on("chat", (data) => {
-    const { name, msg, isAdmin, color } = data;
-
-    // 名前更新
+  // 名前をセット（接続時や変更時）
+  socket.on("setName", (name) => {
     users[socket.id] = name || "名無し";
     broadcastUsers();
+  });
 
+  // チャット
+  socket.on("chat", (data) => {
+    const { name, msg, isAdmin, color } = data;
+    users[socket.id] = name || "名無し"; // 更新
+    broadcastUsers();
     io.emit("chat", { name, msg, isAdmin, color });
   });
 
@@ -50,7 +48,7 @@ io.on("connection", (socket) => {
     broadcastUsers();
   });
 
-  // 切断時
+  // 切断
   socket.on("disconnect", () => {
     console.log(`🔴 切断: ${socket.id}`);
     delete users[socket.id];
@@ -58,7 +56,6 @@ io.on("connection", (socket) => {
   });
 });
 
-// ポート設定
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`🚀 サーバー起動中: http://localhost:${PORT}`);
