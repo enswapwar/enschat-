@@ -9,13 +9,14 @@ const adminPassInput = document.getElementById("admin-pass");
 const colorPicker = document.getElementById("name-color-picker");
 const usersList = document.getElementById("users-list");
 const adminNotice = document.getElementById("admin-notice");
+const clearLogsBtn = document.getElementById("clear-logs"); // ← ログ削除ボタン
 
 let isAdmin = false;
 let nameColor = "#000000";
 
 // --- Cookie操作 ---
 function setCookie(name, value, days) {
-  const expires = new Date(Date.now() + days*86400000).toUTCString();
+  const expires = new Date(Date.now() + days * 86400000).toUTCString();
   document.cookie = `${name}=${value}; expires=${expires}; path=/`;
 }
 function getCookie(name) {
@@ -83,6 +84,13 @@ sendBtn.addEventListener("click", sendMessage);
 chatInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendMessage();
 });
+
+// --- ログ削除 ---
+if (clearLogsBtn) {
+  clearLogsBtn.addEventListener("click", () => {
+    chatLog.innerHTML = "";
+  });
+}
 
 // --- ユーザー一覧更新 ---
 socket.on("updateUsers", (users) => {
