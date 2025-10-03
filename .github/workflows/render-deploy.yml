@@ -1,22 +1,24 @@
-name: Auto Deploy to Render (RSS trigger, safe)
+name: Auto Deploy to Render (RSS trigger)
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:       # 手動でも起動可能
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/5 * * * *"  # 5分ごとに自動起動
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Initialize deploy flag
-        run: echo "deploy=0" >> $GITHUB_ENV
+        run: |
+          echo "deploy=0" >> $GITHUB_ENV
 
-      - name: Monitor RSS for up to 5 minutes
+      - name: RSS
         run: |
           echo "Monitoring RSS for 5 minutes..."
-          for i in {1..30}; do   # 10秒 × 30回 = 5分
+          for i in {1..30}; do   # 10秒 × 30回 = 最大5分
             content=$(curl -s https://www1.x-feeder.info/lo18bx2n/rss.php)
+            # トリガー文字列検知
             if echo "$content" | grep -q "start-mikanchat"; then
               echo "Trigger detected!"
               echo "deploy=1" >> $GITHUB_ENV
