@@ -1,4 +1,4 @@
-name: Auto Deploy to Render (RSS trigger, safe)
+name: Auto Deploy to Render (RSS trigger, 「」内だけチェック)
 
 on:
   workflow_dispatch:
@@ -13,12 +13,20 @@ jobs:
         run: |
           echo "Monitoring RSS for 5 minutes..."
           for i in {1..30}; do
-            content=$(curl -s https://www1.x-feeder.info/lo18bx2n/rss.php)
-            if echo "$content" | grep -q "start-mikanchat"; then
-              echo "Trigger detected! Deploying now..."
+            # 最新のitemの<title>を取得
+            latest_title=$(curl -s https://www1.x-feeder.info/lo18bx2n/rss.php \
+              | xmllint --xpath "string(//item[1]/title)" - 2>/dev/null || true)
+
+            # 「」の中だけを抽出
+            trigger=$(echo "$latest_title" | grep -oP '「\K.*?(?=」)')
+
+            # 抽出結果が start-mikanchat ならデプロイ
+            if [ "$trigger" = "start-mikanchat" ]; then
+              echo "Trigger detected! Deploying..."
               curl -X POST "$RENDER_DEPLOY_HOOK"
               break
             fi
+
             sleep 10
           done
         env:
