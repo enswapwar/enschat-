@@ -1,0 +1,28 @@
+name: Auto Deploy to Render (RSS trigger)
+
+on:
+  workflow_dispatch:     # 手動でも走れる
+  schedule:
+    - cron: "*/5 * * * *"   # 5分ごとに起動
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch RSS
+        run: |
+          content=$(curl -s https://www1.x-feeder.info/lo18bx2n/rss.php)
+          if echo "$content" | grep -q "start-mikanchat"; then
+            echo "Trigger detected!"
+            echo "deploy=1" >> $GITHUB_ENV
+          else
+            echo "No trigger."
+            echo "deploy=0" >> $GITHUB_ENV
+          fi
+
+      - name: Call Render Deploy Hook
+        if: env.deploy == '1'
+        run: |
+          curl -X POST "$RENDER_DEPLOY_HOOK"
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
