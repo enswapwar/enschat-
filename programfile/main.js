@@ -1,5 +1,5 @@
 const socket = io();
-window.socket = io();
+window.socket = socket();
 
 // --- 要素取得 ---
 const chatLog = document.getElementById("chat-log");
